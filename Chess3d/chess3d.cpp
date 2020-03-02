@@ -26,6 +26,7 @@ GLdouble whiteMaterial[] = {1.0, 1.0, 1.0, 1.0};
 double screen_x = 600;
 double screen_y = 500;
 
+enum piece_numbers { pawn = 100, king, queen, rook, bishop, knight };
 
 double GetTime()
 {
@@ -172,24 +173,24 @@ void display(void)
 
 	glPushMatrix();
 	glTranslatef(3000, 0, 1000);
-	DrawPiece("BISHOP.POL");
+	glCallList(bishop);
 	glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(4000, 0, 1000);
-	DrawPiece("KING.POL");
+	glCallList(king);
 	glPopMatrix();
 
 	double z;
 	Interpolate(t, 1.0, 3.0, z, 1000, 5000);
 	glPushMatrix();
 	glTranslatef(5000, 0, z);
-	DrawPiece("QUEEN.POL");
+	glCallList(queen);
 	glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(6000, 0, 1000);
-	DrawPiece("BISHOP.POL");
+	glCallList(bishop);
 	glPopMatrix();
 
 	// Set the color for one side (black), and draw its 16 pieces.
@@ -200,14 +201,14 @@ void display(void)
 	Interpolate(t, 4.0, 6.0, x, 4000, 2000);
 	glPushMatrix();
 	glTranslatef(x, 0, 8000);
-	DrawPiece("KING.POL");
+	glCallList(king);
 	glPopMatrix();
 
 	for(int x=1000; x<=8000; x+=1000)
 	{
 		glPushMatrix();
 		glTranslatef(x, 0, 7000);
-		DrawPiece("PAWN.POL");
+		glCallList(pawn);
 		glPopMatrix();
 	}
 
@@ -302,6 +303,36 @@ void InitializeMyStuff()
 	glEnable(GL_DEPTH_TEST); // turn on depth buffering
 	glEnable(GL_LIGHTING);	// enable general lighting
 	glEnable(GL_LIGHT0);	// enable the first light.
+
+	// Make the display lists for speed
+	glNewList(pawn, GL_COMPILE);
+	DrawPiece("PAWN.POL");
+	glEndList();
+
+	// Make the display lists for speed
+	glNewList(king, GL_COMPILE);
+	DrawPiece("KING.POL");
+	glEndList();
+
+	// Make the display lists for speed
+	glNewList(queen, GL_COMPILE);
+	DrawPiece("QUEEN.POL");
+	glEndList();
+
+	// Make the display lists for speed
+	glNewList(rook, GL_COMPILE);
+	DrawPiece("ROOK.POL");
+	glEndList();
+
+	// Make the display lists for speed
+	glNewList(bishop, GL_COMPILE);
+	DrawPiece("BISHOP.POL");
+	glEndList();
+
+	// Make the display lists for speed
+	glNewList(knight, GL_COMPILE);
+	DrawPiece("KNIGHT.POL");
+	glEndList();
 }
 
 
