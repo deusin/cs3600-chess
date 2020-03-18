@@ -10,8 +10,9 @@
 #include <iostream>
 #include <ctime>
 using namespace std;
-#include "glut.h"
-#include "graphics.h"
+#include "GL/freeglut.h"
+#include "camera.h"
+//#include "graphics.h"
 
 
 // Global Variables
@@ -23,8 +24,14 @@ GLdouble brightGreenMaterial[] = {0.1, 0.9, 0.1, 1.0};
 GLdouble blueMaterial[] = {0.1, 0.2, 0.7, 1.0};
 GLdouble whiteMaterial[] = {1.0, 1.0, 1.0, 1.0};
 
-double screen_x = 600;
-double screen_y = 500;
+double screen_x = 800;
+double screen_y = 600;
+double t = 0.0;
+bool loopExit = false;
+int timeSinceStart;
+int oldTimeSinceStart = 0;
+int deltaTime;
+Camera *camera;
 
 enum piece_numbers { pawn = 100, king, queen, rook, bishop, knight };
 
@@ -145,8 +152,7 @@ double at[3]  = {4500, 0,     4000};
 //
 
 // As t goes from t0 to t1, set v between v0 and v1 accordingly.
-void Interpolate(double t, double t0, double t1,
-	double & v, double v0, double v1)
+void Interpolate(double t, double t0, double t1, double & v, double v0, double v1)
 {
 	double ratio = (t - t0) / (t1 - t0);
 	if (ratio < 0)
@@ -165,7 +171,13 @@ void display(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glLoadIdentity();
-	gluLookAt(eye[0], eye[1], eye[2],  at[0], at[1], at[2],  0,1,0); // Y is up!
+	//gluLookAt(eye[0], eye[1], eye[2],  at[0], at[1], at[2],  0,1,0); // Y is up!
+	gluLookAt(
+		camera->Position.x, camera->Position.y, camera->Position.z,
+		camera->Position.x + camera->Front.x, camera->Position.y + camera->Front.y, camera->Position.z + camera->Front.z,
+		//at[0], at[1], at[2],
+		0, 1, 0
+		);
 
 	// Set the color for one side (white), and draw its 16 pieces.
 	GLfloat mat_amb_diff1[] = {0.8f, 0.9f, 0.5f, 1.0f};
@@ -219,34 +231,15 @@ void display(void)
 	glutPostRedisplay();
 }
 
-
-// This callback function gets called by the Glut
-// system whenever a key is pressed.
-void keyboard(unsigned char c, int x, int y)
-{
-	switch (c) 
-	{
-		case 27: // escape character means to quit the program
-			exit(0);
-			break;
-		default:
-			return; // if we don't care, return without glutPostRedisplay()
-	}
-
-	glutPostRedisplay();
-}
-
-
-
 void SetPerspectiveView(int w, int h)
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	double aspectRatio = (GLdouble) w/(GLdouble) h;
-	gluPerspective( 
-	/* field of view in degree */ 45.0,
-	/* aspect ratio */ aspectRatio,
-	/* Z near */ 100, /* Z far */ 30000.0);
+	double aspectRatio = (GLdouble)w / (GLdouble)h;
+	gluPerspective(
+		/* field of view in degree */ 45.0,
+		/* aspect ratio */ aspectRatio,
+		/* Z near */ 100, /* Z far */ 30000.0);
 	glMatrixMode(GL_MODELVIEW);
 }
 
@@ -260,13 +253,50 @@ void reshape(int w, int h)
 	// Set the pixel resolution of the final picture (Screen coordinates).
 	glViewport(0, 0, w, h);
 
-	SetPerspectiveView(w,h);
+	SetPerspectiveView(w, h);
 
 }
 
+#pragma region Keyboard
+
+// This callback function gets called by the Glut
+// system whenever a key is pressed.
+void processNormalKeys(unsigned char c, int x, int y)
+{
+	CamMove.forward = false;
+	CamMove.back = false;
+	CamMove.left = false;
+	CamMove.right = false;
+	switch (c) 
+	{
+		case 27: // escape character means to quit the program
+			exit(0);
+			break;
+		case 'w':
+			CamMove.forward = true;
+			break;
+		case 's':
+			CamMove.back = true;
+			break;
+		case 'a':
+			CamMove.left = true;
+			break;
+		case 'd':
+			CamMove.right = true;
+			break;
+		default:
+			return; // if we don't care, return without glutPostRedisplay()
+	}
+	camera->ProcessKeyboard(deltaTime);
+	glutPostRedisplay();
+}
+
+#pragma endregion Keyboard
+
+#pragma region Mouse
 // This callback function gets called by the Glut
 // system whenever any mouse button goes up or down.
-void mouse(int mouse_button, int state, int x, int y)
+void mouseButton(int mouse_button, int state, int x, int y)
 {
 	if (mouse_button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) 
 	{
@@ -282,6 +312,43 @@ void mouse(int mouse_button, int state, int x, int y)
 	}
 	glutPostRedisplay();
 }
+
+void mouseMove(int x, int y)
+{
+
+}
+
+void mousePassiveMove(int x, int y)
+{
+	static bool firstMouse = true;
+	static int lastX, lastY;
+
+
+
+	if (firstMouse)
+	{
+		lastX = x;
+		lastY = y;
+		firstMouse = false;
+	}
+	float xoffset = x - lastX;
+	float yoffset = lastY - y; // reversed since y coordinates go from top to bottom
+	lastX = x;
+	lastY = y;
+
+	camera->ProcessMouseMovement(xoffset, yoffset);
+	glutPostRedisplay();
+}
+
+void mouseWheel(int wheel, int direction, int x, int y)
+{
+	//wheel: the wheel number, if the mouse has only a wheel this will be zero.
+	//direction : a + / -1 value indicating the wheel movement direction
+	//x, y : the window mouse coordinates
+}
+
+
+#pragma endregion Mouse
 
 // Your initialization code goes here.
 void InitializeMyStuff()
@@ -333,8 +400,17 @@ void InitializeMyStuff()
 	glNewList(knight, GL_COMPILE);
 	DrawPiece("KNIGHT.POL");
 	glEndList();
+
+	// Create our camera
+	camera = new Camera(glm::vec3(4500, 8000, -4000), glm::vec3(0, 1, 0), -45.0f, 0.0f);
+
 }
 
+void update(int deltaTime)
+{
+	camera->Update(deltaTime);
+
+}
 
 int main(int argc, char **argv)
 {
@@ -355,15 +431,35 @@ int main(int argc, char **argv)
 		glutCreateWindow("Shapes");
 	}
 
+	// callbacks for display
 	glutDisplayFunc(display);
-	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
-	glutMouseFunc(mouse);
+
+	// callbacks for input
+
+	//glutIgnoreKeyRepeat(1);
+	glutKeyboardFunc(processNormalKeys);
+	//glutSpecialFunc(pressKey);
+	//glutSpecialUpFunc(releaseKey);
+	glutMouseFunc(mouseButton);
+	glutMotionFunc(mouseMove);
+	glutPassiveMotionFunc(mousePassiveMove);
+	glutMouseWheelFunc(mouseWheel);
 
 	glClearColor(1,1,1,1);	
 	InitializeMyStuff();
 
-	glutMainLoop();
+	while (!loopExit)
+	{
+		// Get Delta Time for calculations
+		timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
+		deltaTime = timeSinceStart - oldTimeSinceStart;
+		oldTimeSinceStart = timeSinceStart;
+
+		glutMainLoopEvent();
+		update(deltaTime);
+		glutPostRedisplay();
+	}
 
 	return 0;
 }
