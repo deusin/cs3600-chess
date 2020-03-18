@@ -261,12 +261,8 @@ void reshape(int w, int h)
 
 // This callback function gets called by the Glut
 // system whenever a key is pressed.
-void processNormalKeys(unsigned char c, int x, int y)
+void asciiKeyboardDown(unsigned char c, int x, int y)
 {
-	CamMove.forward = false;
-	CamMove.back = false;
-	CamMove.left = false;
-	CamMove.right = false;
 	switch (c) 
 	{
 		case 27: // escape character means to quit the program
@@ -284,11 +280,39 @@ void processNormalKeys(unsigned char c, int x, int y)
 		case 'd':
 			CamMove.right = true;
 			break;
+		case 'c':
+			std::cout << camera->Position.x << ", " << camera->Position.y << ", " << camera->Position.z << "\n";
+			std::cout << camera->Front.x << ", " << camera->Front.y << ", " << camera->Front.z << "\n";
+			std::cout << "P: " << camera->Pitch << ", Y: " << camera->Yaw << "\n";
+			break;
 		default:
 			return; // if we don't care, return without glutPostRedisplay()
 	}
-	camera->ProcessKeyboard(deltaTime);
-	glutPostRedisplay();
+	//camera->ProcessKeyboard(deltaTime);
+	//glutPostRedisplay();
+}
+
+void asciiKeyboardUp(unsigned char c, int x, int y)
+{
+	switch (c)
+	{
+	case 'w':
+		CamMove.forward = false;
+		break;
+	case 's':
+		CamMove.back = false;
+		break;
+	case 'a':
+		CamMove.left = false;
+		break;
+	case 'd':
+		CamMove.right = false;
+		break;
+	default:
+		return; // if we don't care, return without glutPostRedisplay()
+	}
+	//camera->ProcessKeyboard(deltaTime);
+	//glutPostRedisplay();
 }
 
 #pragma endregion Keyboard
@@ -320,17 +344,19 @@ void mouseMove(int x, int y)
 
 void mousePassiveMove(int x, int y)
 {
+	static bool startMouse = true;
 
 	float xoffset = x - (screen_x / 2);
 	float yoffset = (screen_y / 2) - y; // reversed since y coordinates go from top to bottom
 
 	// warping the pointer causes a mousePassiveMove to fire again ... even if we didn't actually move.
 	// So, let's not warp the pointer if we didn't move to avoid unnecessary processing.
-	if (x != screen_x / 2 && y != screen_y / 2)
+	if (x != screen_x / 2 || y != screen_y / 2)
 		glutWarpPointer(screen_x / 2, screen_y / 2);
 
-	camera->ProcessMouseMovement(xoffset, yoffset);
-	glutPostRedisplay();
+	//std::cout << "At: " << x << ", " << y << "\n";
+	CamMove.mouseXOffset = xoffset;
+	CamMove.mouseYOffset = yoffset;
 }
 
 void mouseWheel(int wheel, int direction, int x, int y)
@@ -395,7 +421,7 @@ void InitializeMyStuff()
 	glEndList();
 
 	// Create our camera
-	camera = new Camera(glm::vec3(4500, 8000, -4000), glm::vec3(0, 1, 0), -45.0f, 0.0f);
+	camera = new Camera(glm::vec3(0, 1000, 0), glm::vec3(0, 1, 0), 0.0f, 0.0f);
 
 }
 
@@ -430,8 +456,9 @@ int main(int argc, char **argv)
 
 	// callbacks for input
 
-	//glutIgnoreKeyRepeat(1);
-	glutKeyboardFunc(processNormalKeys);
+	glutIgnoreKeyRepeat(1);
+	glutKeyboardFunc(asciiKeyboardDown);
+	glutKeyboardUpFunc(asciiKeyboardUp);
 	//glutSpecialFunc(pressKey);
 	//glutSpecialUpFunc(releaseKey);
 	glutMouseFunc(mouseButton);

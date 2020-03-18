@@ -9,6 +9,8 @@ static struct Camera_Movement
         back = false,
         left = false,
         right = false;
+    float mouseXOffset = 0.0f;
+    float mouseYOffset = 0.0f;
 } CamMove;
 
 constexpr float MAXLOOKANGLE = 60.0f;
@@ -38,13 +40,14 @@ public:
     {
         Position = position;
         WorldUp = up;
+        Front = glm::vec3(0.0f, 1.0f, 0.0f);
         Yaw = yaw;
         Pitch = pitch;
         onGround = false;
         isFalling = false;
 
         MovementSpeed = 4.0f;
-        MouseSensitivity = 0.5f;
+        MouseSensitivity = 0.1f;
 
         updateCameraVectors();
     }
@@ -55,7 +58,7 @@ public:
         return glm::lookAt(Position, Position + Front, Up);
     }
 
-    void ProcessKeyboard(float deltaTime)
+    void Update(int deltaTime)
     {
         // Handle keyboard movement
         float velocity = MovementSpeed * deltaTime;
@@ -68,26 +71,26 @@ public:
             Position -= Right * velocity;
         if (CamMove.right)
             Position += Right * velocity;
-        updateCameraVectors();
-    }
 
-    void ProcessMouseMovement(float xoffset, float yoffset)
-    {
         // Handle mouse movement
-        Yaw += (xoffset * MouseSensitivity);
-        Pitch += (yoffset * MouseSensitivity);
+        Yaw += (CamMove.mouseXOffset * MouseSensitivity);
+        Pitch += (CamMove.mouseYOffset * MouseSensitivity);
 
         if (Pitch > MAXLOOKANGLE)
             Pitch = MAXLOOKANGLE;
         if (Pitch < -MAXLOOKANGLE)
             Pitch = -MAXLOOKANGLE;
-        updateCameraVectors();
-        std::cout << "Front: " << Front.x << "," << Front.y << "," << Front.z << "\n";
-    }
-    void Update(int deltaTime)
-    {
 
+        //if (CamMove.mouseXOffset != 0 || CamMove.mouseYOffset != 0)
+        //    std::cout << "Offsets: " << CamMove.mouseXOffset << ", " << CamMove.mouseYOffset << "\n";
+        // reset moves after consuming them
+        CamMove.mouseXOffset = 0;
+        CamMove.mouseYOffset = 0;
+
+        updateCameraVectors();
+        ///std::cout << "Front: " << Front.x << "," << Front.y << "," << Front.z << "\n";
         // Any boundary checking or collision detection could go here
+
 
     }
 
