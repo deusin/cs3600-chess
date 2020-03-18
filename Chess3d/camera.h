@@ -11,7 +11,7 @@ static struct Camera_Movement
         right = false;
 } CamMove;
 
-constexpr float MAXLOOKANGLE = 19.0f;
+constexpr float MAXLOOKANGLE = 60.0f;
 
 
 class Camera
@@ -43,7 +43,7 @@ public:
         onGround = false;
         isFalling = false;
 
-        MovementSpeed = 2.0f;
+        MovementSpeed = 4.0f;
         MouseSensitivity = 0.5f;
 
         updateCameraVectors();

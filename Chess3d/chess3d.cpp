@@ -320,21 +320,14 @@ void mouseMove(int x, int y)
 
 void mousePassiveMove(int x, int y)
 {
-	static bool firstMouse = true;
-	static int lastX, lastY;
 
+	float xoffset = x - (screen_x / 2);
+	float yoffset = (screen_y / 2) - y; // reversed since y coordinates go from top to bottom
 
-
-	if (firstMouse)
-	{
-		lastX = x;
-		lastY = y;
-		firstMouse = false;
-	}
-	float xoffset = x - lastX;
-	float yoffset = lastY - y; // reversed since y coordinates go from top to bottom
-	lastX = x;
-	lastY = y;
+	// warping the pointer causes a mousePassiveMove to fire again ... even if we didn't actually move.
+	// So, let's not warp the pointer if we didn't move to avoid unnecessary processing.
+	if (x != screen_x / 2 && y != screen_y / 2)
+		glutWarpPointer(screen_x / 2, screen_y / 2);
 
 	camera->ProcessMouseMovement(xoffset, yoffset);
 	glutPostRedisplay();
@@ -448,6 +441,8 @@ int main(int argc, char **argv)
 
 	glClearColor(1,1,1,1);	
 	InitializeMyStuff();
+	glutSetCursor(GLUT_CURSOR_NONE);
+	glutWarpPointer(screen_x / 2, screen_y / 2);
 
 	while (!loopExit)
 	{
