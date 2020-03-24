@@ -161,8 +161,18 @@ void Interpolate(double t, double t0, double t1, double& v, double v0, double v1
     v = v0 + (v1 - v0) * ratio;
 }
 
-void drawBoardSquare(int i, int j)
+void drawBoardSquare(int i, int j, bool isDark)
 {
+    if (isDark)
+    {
+        GLfloat gray[]{ 0.5, 0.5, 0.5, 1.0 };
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+    }
+    else
+    {
+        GLfloat white[]{ 3.0, 3.0, 3.0, 1.0 };
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, white);
+    }
     glBegin(GL_QUADS);
     glVertex3d(500.0 + (i * 1000.0), 0, 500 + (j * 1000.0));
     glVertex3d(500.0 + (i * 1000.0), 0, 500 + ((j + 1.0) * 1000.0));
@@ -253,6 +263,71 @@ void display(void)
 
     glEnd();
 
+    // 3d ness
+
+
+
+    // lines
+    GLfloat black[]{ 0.2, 0.2, 0.2, 1.0 };
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, black);
+
+    glBegin(GL_LINES);
+    glVertex3d(500, 0, 500);
+    glVertex3d(0, -200, 0);
+
+    glVertex3d(500, 0, 8500);
+    glVertex3d(0, -200, 9000);
+
+    glVertex3d(8500, 0, 8500);
+    glVertex3d(9000, -200, 9000);
+
+    glVertex3d(8500, 0, 500);
+    glVertex3d(9000, -200, 0);
+    glEnd();
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+
+    // bottom
+    glBegin(GL_QUADS);
+    glVertex3d(0, -200, 0);
+    glVertex3d(0, -200, 9000);
+    glVertex3d(9000, -200, 9000);
+    glVertex3d(9000, -200, 0);
+    glEnd();
+
+    // edge 1
+    glBegin(GL_QUADS);
+    glVertex3d(500, 0, 500);
+    glVertex3d(0, -200, 0);
+    glVertex3d(0, -200, 9000);
+    glVertex3d(500, 0, 8500);
+    glEnd();
+
+    // edge 2
+    glBegin(GL_QUADS);
+    glVertex3d(500, 0, 8500);
+    glVertex3d(0, -200, 9000);
+    glVertex3d(9000, -200, 9000);
+    glVertex3d(8500, 0, 8500);
+    glEnd();
+
+
+    // edge 3
+    glBegin(GL_QUADS);
+    glVertex3d(8500, 0, 8500);
+    glVertex3d(9000, -200, 9000);
+    glVertex3d(9000, -200, 0);
+    glVertex3d(8500, 0, 500);
+    glEnd();
+
+    // edge 4
+    glBegin(GL_QUADS);
+    glVertex3d(9000, -200, 0);
+    glVertex3d(8500, 0, 500);
+    glVertex3d(500, 0, 500);
+    glVertex3d(0, -200, 0);
+    glEnd();
+
     // fill in squares
     // starts as white
 
@@ -261,23 +336,11 @@ void display(void)
     {
         for (size_t j = 0; j < 8; j++)
         {
-            if (fill)
-            {
-                drawBoardSquare(i, j);
-            }
-
+            drawBoardSquare(i, j, fill);
             fill = !fill;
         }
         fill = !fill;
     }
-
-    //glBegin(GL_QUADS);
-    //glVertex3d(500.0 , 0, 500); //+ (j * 1000.0));
-    //glVertex3d(500.0 , 0, 1500); //+ ((j + 1.0) * 1000.0));
-    //glVertex3d(1500.0, 0, 1500); //+ ((j + 1.0) * 1000.0));
-    //glVertex3d(1500.0, 0, 500); //+ (j * 1000.0));
-    //glEnd();
-
 
     GLfloat light_position[] = { 1,2,-.1f, 0 }; // light comes FROM this vector direction.
     glLightfv(GL_LIGHT0, GL_POSITION, light_position); // position first light
