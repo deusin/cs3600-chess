@@ -35,6 +35,15 @@ Camera* camera;
 
 enum piece_numbers { pawn = 100, king, queen, rook, bishop, knight };
 
+struct BoardSquare
+{
+    glm::vec3 Center;
+    bool HasPiece;
+    piece_numbers Piece;
+    bool IsPieceBlack;
+};
+BoardSquare gameBoard[8][8];
+
 double GetTime()
 {
     static clock_t start_time = clock();
@@ -342,6 +351,36 @@ void display(void)
         fill = !fill;
     }
 
+    // draw pieces from board
+
+    for (size_t i = 0; i < 8; i++)
+    {
+        for (size_t j = 0; j < 8; j++)
+        {
+            if (gameBoard[i][j].HasPiece)
+            {
+                if (gameBoard[i][j].IsPieceBlack)
+                {
+                    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff2);
+                }
+                else
+                {
+                    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff1);
+                }
+                glPushMatrix();
+                glTranslatef(gameBoard[i][j].Center.x, gameBoard[i][j].Center.y, gameBoard[i][j].Center.z);
+                glCallList(gameBoard[i][j].Piece);
+                glPopMatrix();
+            }
+        }
+    }
+
+
+
+
+    //----------------------------------------------------------
+
+
     GLfloat light_position[] = { 1,2,-.1f, 0 }; // light comes FROM this vector direction.
     glLightfv(GL_LIGHT0, GL_POSITION, light_position); // position first light
 
@@ -542,7 +581,29 @@ void InitializeMyStuff()
     // Create our camera
     camera = new Camera(glm::vec3(0, 1000, 0), glm::vec3(0, 1, 0), 0.0f, 0.0f);
 
+    // setup game board structure
+    for (size_t i = 0; i < 8; i++)
+    {
+        for (size_t j = 0; j < 8; j++)
+        {
+            gameBoard[i][j].HasPiece = false;
+            gameBoard[i][j].Center = glm::vec3((i + 1) * 1000, 0, (j + 1) * 1000);
+        }
+    }
+
+    // Add pieces
+
+    gameBoard[0][0].HasPiece = true;
+    gameBoard[0][0].IsPieceBlack = false;
+    gameBoard[0][0].Piece = rook;
+
+    gameBoard[1][0].HasPiece = true;
+    gameBoard[1][0].IsPieceBlack = false;
+    gameBoard[1][0].Piece = knight;
+
 }
+
+
 
 void update(int deltaTime)
 {
