@@ -174,13 +174,13 @@ void drawBoardSquare(int i, int j, bool isDark)
 {
     if (isDark)
     {
-        GLfloat gray[]{ 0.5, 0.5, 0.5, 1.0 };
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+        GLfloat dark[]{ 0.1, 0.1, 0.1, 1.0 };
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, dark);
     }
     else
     {
-        GLfloat white[]{ 3.0, 3.0, 3.0, 1.0 };
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, white);
+        GLfloat light[]{ 0.5, 0.5, 0.5, 1.0 };
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, light);
     }
     glBegin(GL_QUADS);
     glVertex3d(500.0 + (i * 1000.0), 0, 500 + (j * 1000.0));
@@ -190,73 +190,14 @@ void drawBoardSquare(int i, int j, bool isDark)
     glEnd();
 }
 
-// This callback function gets called by the Glut
-// system whenever it decides things need to be redrawn.
-void display(void)
+void drawBoard()
 {
-    double t = GetTime();
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glLoadIdentity();
-    //gluLookAt(eye[0], eye[1], eye[2],  at[0], at[1], at[2],  0,1,0); // Y is up!
-    gluLookAt(
-        camera->Position.x, camera->Position.y, camera->Position.z,
-        camera->Position.x + camera->Front.x, camera->Position.y + camera->Front.y, camera->Position.z + camera->Front.z,
-        //at[0], at[1], at[2],
-        0, 1, 0
-        );
-
-    // Set the color for one side (white), and draw its 16 pieces.
-    GLfloat mat_amb_diff1[] = { 0.8f, 0.9f, 0.5f, 1.0f };
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff1);
-
-    glPushMatrix();
-    glTranslatef(3000, 0, 1000);
-    glCallList(bishop);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(4000, 0, 1000);
-    glCallList(king);
-    glPopMatrix();
-
-    double z;
-    Interpolate(t, 1.0, 3.0, z, 1000, 5000);
-    glPushMatrix();
-    glTranslatef(5000, 0, z);
-    glCallList(queen);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(6000, 0, 1000);
-    glCallList(bishop);
-    glPopMatrix();
-
-    // Set the color for one side (black), and draw its 16 pieces.
-    GLfloat mat_amb_diff2[] = { 0.1f, 0.5f, 0.8f, 1.0 };
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff2);
-
-    double x;
-    Interpolate(t, 4.0, 6.0, x, 4000, 2000);
-    glPushMatrix();
-    glTranslatef(x, 0, 8000);
-    glCallList(king);
-    glPopMatrix();
-
-    for (int x = 1000; x <= 8000; x += 1000)
-    {
-        glPushMatrix();
-        glTranslatef(x, 0, 7000);
-        glCallList(pawn);
-        glPopMatrix();
-    }
-
-
+    GLfloat black[]{ 0.0, 0.0, 0.0, 1.0 };
+    GLfloat gray[]{ 0.2, 0.2, 0.2, 1.0 };
 
     // Outline of board
-    GLfloat gray[]{ 1.9, 1.9, 1.9, 1.0 };
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, black);
+
     glBegin(GL_LINES);
     glVertex3d(500, 0, 500);
     glVertex3d(500, 0, 8500);
@@ -273,12 +214,7 @@ void display(void)
     glEnd();
 
     // 3d ness
-
-
-
     // lines
-    GLfloat black[]{ 0.2, 0.2, 0.2, 1.0 };
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, black);
 
     glBegin(GL_LINES);
     glVertex3d(500, 0, 500);
@@ -351,6 +287,13 @@ void display(void)
         fill = !fill;
     }
 
+}
+
+void drawPieces()
+{
+    GLfloat mat_amb_diff1[] = { 0.8f, 0.9f, 0.5f, 1.0f };
+    GLfloat mat_amb_diff2[] = { 0.1f, 0.5f, 0.8f, 1.0 };
+
     // draw pieces from board
 
     for (size_t i = 0; i < 8; i++)
@@ -374,6 +317,76 @@ void display(void)
             }
         }
     }
+
+}
+
+// This callback function gets called by the Glut
+// system whenever it decides things need to be redrawn.
+void display(void)
+{
+    double t = GetTime();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glLoadIdentity();
+    //gluLookAt(eye[0], eye[1], eye[2],  at[0], at[1], at[2],  0,1,0); // Y is up!
+    gluLookAt(
+        camera->Position.x, camera->Position.y, camera->Position.z,
+        camera->Position.x + camera->Front.x, camera->Position.y + camera->Front.y, camera->Position.z + camera->Front.z,
+        //at[0], at[1], at[2],
+        0, 1, 0
+        );
+
+    drawBoard();
+    drawPieces();
+
+    //// Set the color for one side (white), and draw its 16 pieces.
+    //GLfloat mat_amb_diff1[] = { 0.8f, 0.9f, 0.5f, 1.0f };
+    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff1);
+
+    //glPushMatrix();
+    //glTranslatef(3000, 0, 1000);
+    //glCallList(bishop);
+    //glPopMatrix();
+
+    //glPushMatrix();
+    //glTranslatef(4000, 0, 1000);
+    //glCallList(king);
+    //glPopMatrix();
+
+    //double z;
+    //Interpolate(t, 1.0, 3.0, z, 1000, 5000);
+    //glPushMatrix();
+    //glTranslatef(5000, 0, z);
+    //glCallList(queen);
+    //glPopMatrix();
+
+    //glPushMatrix();
+    //glTranslatef(6000, 0, 1000);
+    //glCallList(bishop);
+    //glPopMatrix();
+
+    //// Set the color for one side (black), and draw its 16 pieces.
+    //GLfloat mat_amb_diff2[] = { 0.1f, 0.5f, 0.8f, 1.0 };
+    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff2);
+
+    //double x;
+    //Interpolate(t, 4.0, 6.0, x, 4000, 2000);
+    //glPushMatrix();
+    //glTranslatef(x, 0, 8000);
+    //glCallList(king);
+    //glPopMatrix();
+
+    //for (int x = 1000; x <= 8000; x += 1000)
+    //{
+    //    glPushMatrix();
+    //    glTranslatef(x, 0, 7000);
+    //    glCallList(pawn);
+    //    glPopMatrix();
+    //}
+
+
+
 
 
 
@@ -593,16 +606,93 @@ void InitializeMyStuff()
 
     // Add pieces
 
+    // Pawns
+    for (size_t i = 0; i < 8; i++)
+    {
+        gameBoard[i][1].HasPiece = true;
+        gameBoard[i][1].IsPieceBlack = false;
+        gameBoard[i][1].Piece = pawn;
+
+        gameBoard[i][6].HasPiece = true;
+        gameBoard[i][6].IsPieceBlack = true;
+        gameBoard[i][6].Piece = pawn;
+    }
+
+    // Rooks
+
     gameBoard[0][0].HasPiece = true;
     gameBoard[0][0].IsPieceBlack = false;
     gameBoard[0][0].Piece = rook;
+
+    gameBoard[7][0].HasPiece = true;
+    gameBoard[7][0].IsPieceBlack = false;
+    gameBoard[7][0].Piece = rook;
+
+    gameBoard[0][7].HasPiece = true;
+    gameBoard[0][7].IsPieceBlack = true;
+    gameBoard[0][7].Piece = rook;
+
+    gameBoard[7][7].HasPiece = true;
+    gameBoard[7][7].IsPieceBlack = true;
+    gameBoard[7][7].Piece = rook;
+
+    // Knights
 
     gameBoard[1][0].HasPiece = true;
     gameBoard[1][0].IsPieceBlack = false;
     gameBoard[1][0].Piece = knight;
 
-}
+    gameBoard[6][0].HasPiece = true;
+    gameBoard[6][0].IsPieceBlack = false;
+    gameBoard[6][0].Piece = knight;
 
+    gameBoard[1][7].HasPiece = true;
+    gameBoard[1][7].IsPieceBlack = true;
+    gameBoard[1][7].Piece = knight;
+
+    gameBoard[6][7].HasPiece = true;
+    gameBoard[6][7].IsPieceBlack = true;
+    gameBoard[6][7].Piece = knight;
+
+    // Bishops
+
+    gameBoard[2][0].HasPiece = true;
+    gameBoard[2][0].IsPieceBlack = false;
+    gameBoard[2][0].Piece = bishop;
+
+    gameBoard[5][0].HasPiece = true;
+    gameBoard[5][0].IsPieceBlack = false;
+    gameBoard[5][0].Piece = bishop;
+
+    gameBoard[2][7].HasPiece = true;
+    gameBoard[2][7].IsPieceBlack = true;
+    gameBoard[2][7].Piece = bishop;
+
+    gameBoard[5][7].HasPiece = true;
+    gameBoard[5][7].IsPieceBlack = true;
+    gameBoard[5][7].Piece = bishop;
+
+    // Kings
+
+    gameBoard[3][0].HasPiece = true;
+    gameBoard[3][0].IsPieceBlack = false;
+    gameBoard[3][0].Piece = king;
+
+    gameBoard[3][7].HasPiece = true;
+    gameBoard[3][7].IsPieceBlack = true;
+    gameBoard[3][7].Piece = king;
+
+    // Queens
+
+    gameBoard[4][0].HasPiece = true;
+    gameBoard[4][0].IsPieceBlack = false;
+    gameBoard[4][0].Piece = queen;
+
+    gameBoard[4][7].HasPiece = true;
+    gameBoard[4][7].IsPieceBlack = true;
+    gameBoard[4][7].Piece = queen;
+
+}
 
 
 void update(int deltaTime)
