@@ -8,7 +8,8 @@ static struct Camera_Movement
         forward = false,
         back = false,
         left = false,
-        right = false;
+        right = false,
+        up = false;
     float mouseXOffset = 0.0f;
     float mouseYOffset = 0.0f;
 } CamMove;
@@ -71,6 +72,8 @@ public:
             Position -= Right * velocity;
         if (CamMove.right)
             Position += Right * velocity;
+        if (CamMove.up)
+            Position += WorldUp * velocity;
 
         // Handle mouse movement
         Yaw += (CamMove.mouseXOffset * MouseSensitivity);

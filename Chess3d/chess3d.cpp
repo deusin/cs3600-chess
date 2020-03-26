@@ -54,6 +54,7 @@ struct PieceMovement
     piece_numbers Piece;
     bool IsPieceBlack;
     bool IsActive;
+    glm::vec3 CurrentPosition;
 };
 
 vector<PieceMovement> animations;
@@ -335,6 +336,34 @@ void drawPieces()
 
 }
 
+void drawMovingPieces()
+{
+    GLfloat mat_amb_diff1[] = { 1.6f, 1.8f, 1.0f, 1.0f };
+    GLfloat mat_amb_diff2[] = { 0.2f, 1.0f, 1.6f, 1.0f };
+
+    for (size_t i = 0; i < animations.size(); i++)
+    {
+        if (animations[i].IsActive)
+        {
+
+            if (animations[i].IsPieceBlack)
+            {
+                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff2);
+            }
+            else
+            {
+                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff1);
+            }
+
+            glPushMatrix();
+            glTranslatef(animations[i].CurrentPosition.x, animations[i].CurrentPosition.y, animations[i].CurrentPosition.z);
+            glCallList(animations[i].Piece);
+            glPopMatrix();
+
+        }
+    }
+}
+
 // This callback function gets called by the Glut
 // system whenever it decides things need to be redrawn.
 void display(void)
@@ -353,61 +382,8 @@ void display(void)
         );
 
     drawBoard();
+    drawMovingPieces();
     drawPieces();
-
-    //// Set the color for one side (white), and draw its 16 pieces.
-    //GLfloat mat_amb_diff1[] = { 0.8f, 0.9f, 0.5f, 1.0f };
-    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff1);
-
-    //glPushMatrix();
-    //glTranslatef(3000, 0, 1000);
-    //glCallList(bishop);
-    //glPopMatrix();
-
-    //glPushMatrix();
-    //glTranslatef(4000, 0, 1000);
-    //glCallList(king);
-    //glPopMatrix();
-
-    //double z;
-    //Interpolate(t, 1.0, 3.0, z, 1000, 5000);
-    //glPushMatrix();
-    //glTranslatef(5000, 0, z);
-    //glCallList(queen);
-    //glPopMatrix();
-
-    //glPushMatrix();
-    //glTranslatef(6000, 0, 1000);
-    //glCallList(bishop);
-    //glPopMatrix();
-
-    //// Set the color for one side (black), and draw its 16 pieces.
-    //GLfloat mat_amb_diff2[] = { 0.1f, 0.5f, 0.8f, 1.0 };
-    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_amb_diff2);
-
-    //double x;
-    //Interpolate(t, 4.0, 6.0, x, 4000, 2000);
-    //glPushMatrix();
-    //glTranslatef(x, 0, 8000);
-    //glCallList(king);
-    //glPopMatrix();
-
-    //for (int x = 1000; x <= 8000; x += 1000)
-    //{
-    //    glPushMatrix();
-    //    glTranslatef(x, 0, 7000);
-    //    glCallList(pawn);
-    //    glPopMatrix();
-    //}
-
-
-
-
-
-
-
-    //----------------------------------------------------------
-
 
     GLfloat light_position[] = { 1,2,-.1f, 0 }; // light comes FROM this vector direction.
     glLightfv(GL_LIGHT0, GL_POSITION, light_position); // position first light
@@ -454,6 +430,9 @@ void asciiKeyboardDown(unsigned char c, int x, int y)
     case 27: // escape character means to quit the program
         exit(0);
         break;
+    case 32: // space bar
+        CamMove.up = true;
+        break;
     case 'w':
         CamMove.forward = true;
         break;
@@ -482,6 +461,9 @@ void asciiKeyboardUp(unsigned char c, int x, int y)
 {
     switch (c)
     {
+    case 32: // space bar
+        CamMove.up = false;
+        break;
     case 'w':
         CamMove.forward = false;
         break;
@@ -732,6 +714,39 @@ void InitializeMyStuff()
     w2.IsActive = false;
     animations.push_back(w2);
 
+    PieceMovement b2;
+    b2.From = &gameBoard[6][7]; // Black Knight
+    b2.To = &gameBoard[5][5];
+    b2.StartTime = 14.0;
+    b2.EndTime = 16.0;
+    b2.IsActive = false;
+    animations.push_back(b2);
+
+    PieceMovement w3;
+    w3.From = &gameBoard[4][0]; // white queen
+    w3.To = &gameBoard[0][4];
+    w3.StartTime = 18.0;
+    w3.EndTime = 20.0;
+    w3.IsActive = false;
+    animations.push_back(w3);
+
+    PieceMovement b3;
+    b3.From = &gameBoard[5][5]; // Black Knight
+    b3.To = &gameBoard[4][3];
+    b3.StartTime = 22.0;
+    b3.EndTime = 24.0;
+    b3.IsActive = false;
+    animations.push_back(b3);
+
+
+    PieceMovement w4;
+    w2.From = &gameBoard[5][3]; // white bishop
+    w2.To = &gameBoard[2][6];
+    w2.StartTime = 26.0;
+    w2.EndTime = 28.0;
+    w2.IsActive = false;
+    animations.push_back(w2);
+
 
 }
 
@@ -747,6 +762,37 @@ void update(int deltaTime)
 
     for (size_t i = 0; i < animations.size(); i++)
     {
+        // Starting up a new animation
+        if (!animations[i].IsActive && t > animations[i].StartTime && t < animations[i].EndTime)
+        {
+            // Set which piece we're moving around
+            animations[i].Piece = animations[i].From->Piece;
+            animations[i].IsPieceBlack = animations[i].From->IsPieceBlack;
+
+            // Remove the animating piece from the board
+            animations[i].From->HasPiece = false;
+
+            // TODO: Set interpolated position of piece
+
+            // Activate
+            animations[i].IsActive = true;
+        }
+
+        // Update an active animation
+        if (animations[i].IsActive && t < animations[i].EndTime)
+        {
+            // TODO: Set interpolated position of piece
+            double x, z;
+
+            Interpolate(t, animations[i].StartTime, animations[i].EndTime, x, animations[i].From->Center.x, animations[i].To->Center.x);
+            Interpolate(t, animations[i].StartTime, animations[i].EndTime, z, animations[i].From->Center.z, animations[i].To->Center.z);
+
+            animations[i].CurrentPosition.x = x;
+            animations[i].CurrentPosition.y = 0;
+            animations[i].CurrentPosition.z = z;
+        }
+
+        // End an active animation
         if (animations[i].IsActive && t > animations[i].EndTime)
         {
             // Set the piece at the end
@@ -758,30 +804,7 @@ void update(int deltaTime)
             animations[i].IsActive = false;
         }
 
-        if (!animations[i].IsActive && t > animations[i].StartTime && t < animations[i].EndTime)
-        {
-            // Set which piece we're moving around
-            animations[i].Piece = animations[i].From->Piece;
-            animations[i].IsPieceBlack = animations[i].From->IsPieceBlack;
-
-            // Remove the animating piece from the board
-            animations[i].From->HasPiece = false;
-
-            // Activate
-            animations[i].IsActive = true;
-        }
-
-
     }
-
-    //double z;
-    //Interpolate(t, 1.0, 3.0, z, 1000, 5000);
-    //glPushMatrix();
-    //glTranslatef(5000, 0, z);
-    //glCallList(queen);
-    //glPopMatrix();
-
-
 
 }
 
@@ -820,7 +843,7 @@ int main(int argc, char** argv)
     glutPassiveMotionFunc(mousePassiveMove);
     glutMouseWheelFunc(mouseWheel);
 
-    glClearColor(1, 1, 1, 1);
+    glClearColor(0, 0, 0, 1);
     InitializeMyStuff();
     glutSetCursor(GLUT_CURSOR_NONE);
     glutWarpPointer(screen_x / 2, screen_y / 2);
