@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <ctime>
+#include <vector>
 using namespace std;
 #include "GL/freeglut.h"
 #include "camera.h"
@@ -43,6 +44,20 @@ struct BoardSquare
     bool IsPieceBlack;
 };
 BoardSquare gameBoard[8][8];
+
+struct PieceMovement
+{
+    BoardSquare* From;
+    BoardSquare* To;
+    double StartTime;
+    double EndTime;
+    piece_numbers Piece;
+    bool IsPieceBlack;
+    bool IsActive;
+};
+
+vector<PieceMovement> animations;
+
 
 double GetTime()
 {
@@ -692,12 +707,81 @@ void InitializeMyStuff()
     gameBoard[4][7].IsPieceBlack = true;
     gameBoard[4][7].Piece = queen;
 
+    PieceMovement w1;
+    w1.From = &gameBoard[3][1]; // white pawn
+    w1.To = &gameBoard[3][3];
+    w1.StartTime = 2.0;
+    w1.EndTime = 4.0;
+    w1.IsActive = false;
+    animations.push_back(w1);
+
+    PieceMovement b1; 
+    b1.From = &gameBoard[1][7]; // Black Knight
+    b1.To = &gameBoard[0][5];
+    b1.StartTime = 6.0;
+    b1.EndTime = 8.0;
+    b1.IsActive = false;
+    animations.push_back(b1);
+
+
+    PieceMovement w2;
+    w2.From = &gameBoard[2][0]; // white bishop
+    w2.To = &gameBoard[5][3];
+    w2.StartTime = 10.0;
+    w2.EndTime = 12.0;
+    w2.IsActive = false;
+    animations.push_back(w2);
+
+
 }
 
 
 void update(int deltaTime)
 {
     camera->Update(deltaTime);
+
+    double t = GetTime();
+
+    // Check for new animations starting
+    // Back to front to avoid problems with popping
+
+    for (size_t i = 0; i < animations.size(); i++)
+    {
+        if (animations[i].IsActive && t > animations[i].EndTime)
+        {
+            // Set the piece at the end
+            animations[i].To->HasPiece = true;
+            animations[i].To->IsPieceBlack = animations[i].IsPieceBlack;
+            animations[i].To->Piece = animations[i].Piece;
+
+            // Deactivate
+            animations[i].IsActive = false;
+        }
+
+        if (!animations[i].IsActive && t > animations[i].StartTime && t < animations[i].EndTime)
+        {
+            // Set which piece we're moving around
+            animations[i].Piece = animations[i].From->Piece;
+            animations[i].IsPieceBlack = animations[i].From->IsPieceBlack;
+
+            // Remove the animating piece from the board
+            animations[i].From->HasPiece = false;
+
+            // Activate
+            animations[i].IsActive = true;
+        }
+
+
+    }
+
+    //double z;
+    //Interpolate(t, 1.0, 3.0, z, 1000, 5000);
+    //glPushMatrix();
+    //glTranslatef(5000, 0, z);
+    //glCallList(queen);
+    //glPopMatrix();
+
+
 
 }
 
