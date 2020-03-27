@@ -747,7 +747,6 @@ void InitializeMyStuff()
     w2.IsActive = false;
     animations.push_back(w2);
 
-
 }
 
 
@@ -787,8 +786,10 @@ void update(int deltaTime)
             Interpolate(t, animations[i].StartTime, animations[i].EndTime, x, animations[i].From->Center.x, animations[i].To->Center.x);
             Interpolate(t, animations[i].StartTime, animations[i].EndTime, z, animations[i].From->Center.z, animations[i].To->Center.z);
 
+            double ratio = (t - animations[i].StartTime) / (animations[i].EndTime - animations[i].StartTime);
+            double distance = sqrt(pow(animations[i].To->Center.x - animations[i].From->Center.x, 2) + pow(animations[i].To->Center.z - animations[i].From->Center.z, 2));
             animations[i].CurrentPosition.x = x;
-            animations[i].CurrentPosition.y = 0;
+            animations[i].CurrentPosition.y = 2 * (1 - ratio) * ratio * distance;
             animations[i].CurrentPosition.z = z;
         }
 
