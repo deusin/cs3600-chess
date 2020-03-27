@@ -846,7 +846,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        glutCreateWindow("Shapes");
+        glutCreateWindow("Chess 3d");
     }
 
     // callbacks for display
