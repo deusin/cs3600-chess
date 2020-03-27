@@ -55,6 +55,11 @@ struct PieceMovement
     bool IsPieceBlack;
     bool IsActive;
     glm::vec3 CurrentPosition;
+    double Percent;
+
+    // Overloading this a bit, animation could be a whole class system
+    bool DoFlatten = false;
+
 };
 
 vector<PieceMovement> animations;
@@ -357,6 +362,10 @@ void drawMovingPieces()
 
             glPushMatrix();
             glTranslatef(animations[i].CurrentPosition.x, animations[i].CurrentPosition.y, animations[i].CurrentPosition.z);
+            if (animations[i].DoFlatten)
+            {
+                glScaled(1.0, (1.0 - animations[i].Percent), 1.0);
+            }
             glCallList(animations[i].Piece);
             glPopMatrix();
 
@@ -740,12 +749,21 @@ void InitializeMyStuff()
 
 
     PieceMovement w4;
-    w2.From = &gameBoard[5][3]; // white bishop
-    w2.To = &gameBoard[2][6];
-    w2.StartTime = 26.0;
-    w2.EndTime = 28.0;
-    w2.IsActive = false;
-    animations.push_back(w2);
+    w4.From = &gameBoard[5][3]; // white bishop
+    w4.To = &gameBoard[2][6];
+    w4.StartTime = 26.0;
+    w4.EndTime = 28.0;
+    w4.IsActive = false;
+    animations.push_back(w4);
+
+    PieceMovement b4;
+    b4.From = &gameBoard[2][6]; // pawn
+    b4.To = &gameBoard[2][6];
+    b4.StartTime = 27.5;
+    b4.EndTime = 28.0;
+    b4.IsActive = false;
+    b4.DoFlatten = true;
+    animations.push_back(b4);
 
 }
 
@@ -791,16 +809,19 @@ void update(int deltaTime)
             animations[i].CurrentPosition.x = x;
             animations[i].CurrentPosition.y = 2 * (1 - ratio) * ratio * distance;
             animations[i].CurrentPosition.z = z;
+            animations[i].Percent = ratio;
         }
 
         // End an active animation
         if (animations[i].IsActive && t > animations[i].EndTime)
         {
             // Set the piece at the end
-            animations[i].To->HasPiece = true;
-            animations[i].To->IsPieceBlack = animations[i].IsPieceBlack;
-            animations[i].To->Piece = animations[i].Piece;
-
+            if (!animations[i].DoFlatten)
+            {
+                animations[i].To->HasPiece = true;
+                animations[i].To->IsPieceBlack = animations[i].IsPieceBlack;
+                animations[i].To->Piece = animations[i].Piece;
+            }
             // Deactivate
             animations[i].IsActive = false;
         }
